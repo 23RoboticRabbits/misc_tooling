@@ -23,6 +23,11 @@ die() {
   exit 1
 }
 
+ensure_sudo_session() {
+  log "Requesting administrator access up front so privileged installs can run without additional prompts"
+  sudo -v || die "Administrator access is required to continue"
+}
+
 append_block_if_missing() {
   local file="$1"
   local marker="$2"
@@ -422,6 +427,7 @@ install_requested_packages() {
   install_with_fallback "claude-code" "cask:claude-code"
   install_with_fallback "codex" "cask:codex"
   install_with_fallback "cursor" "cask:cursor"
+  install_with_fallback "caffeine" "cask:caffeine"
   install_with_fallback "google-chrome" "cask:google-chrome"
   install_with_fallback "google-drive" "cask:google-drive"
   install_with_fallback "iterm2" "cask:iterm2"
@@ -1776,6 +1782,7 @@ print_summary() {
 }
 
 main() {
+  ensure_sudo_session
   install_homebrew
   load_homebrew_env
 
