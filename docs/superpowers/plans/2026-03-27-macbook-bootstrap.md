@@ -4,7 +4,7 @@
 
 **Goal:** Build a standalone, rerunnable macOS bootstrap script that installs Homebrew packages, configures zsh, Git, Sublime defaults, and iTerm2.
 
-**Architecture:** Use one Bash 3.2-compatible script with focused helper functions for package installation, file updates, app defaults, and iTerm2 profile creation. Keep mandatory steps fatal and non-critical steps warning-only so a partial failure does not block the rest of the machine setup.
+**Architecture:** Use one Bash 3.2-compatible script with focused helper functions for package installation, file updates, app defaults, and iTerm2 profile creation. Managed shell config should use marker-delimited blocks so reruns can add missing config and remove obsolete bootstrap-managed entries. Keep mandatory steps fatal and non-critical steps warning-only so a partial failure does not block the rest of the machine setup.
 
 **Tech Stack:** Bash, Homebrew, macOS `defaults`, `duti`, `curl`, `plutil`
 

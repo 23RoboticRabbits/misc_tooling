@@ -39,6 +39,38 @@ append_block_if_missing() {
   } >>"$file" || warn "Failed to append block to ${file}"
 }
 
+remove_block_if_present() {
+  local file="$1"
+  local start_marker="$2"
+  local end_marker="$3"
+  local tmp_file
+
+  if [ ! -f "$file" ] || ! grep -Fq "$start_marker" "$file" 2>/dev/null; then
+    return 0
+  fi
+
+  tmp_file=$(mktemp "${TMPDIR:-/tmp}/macbook-bootstrap.XXXXXX") || {
+    warn "Failed to allocate temp file while updating ${file}"
+    return 0
+  }
+
+  /usr/bin/awk -v start="$start_marker" -v end="$end_marker" '
+    index($0, start) { skipping=1; next }
+    index($0, end) { skipping=0; next }
+    !skipping { print }
+  ' "$file" >"$tmp_file" || {
+    warn "Failed to remove managed block from ${file}"
+    rm -f "$tmp_file"
+    return 0
+  }
+
+  mv "$tmp_file" "$file" || {
+    warn "Failed to update ${file}"
+    rm -f "$tmp_file"
+    return 0
+  }
+}
+
 ensure_line_in_file() {
   local file="$1"
   local line="$2"
@@ -327,22 +359,6 @@ EOF
   append_block_if_missing "${HOME}/.zshrc" "# >>> macbook-bootstrap: editor >>>" "$zshrc_block"
 }
 
-ensure_zsh_op_completion_config() {
-  local zshrc_block
-
-  zshrc_block=$(cat <<'EOF'
-# >>> macbook-bootstrap: 1password-cli completion >>>
-if command -v op >/dev/null 2>&1; then
-  eval "$(op completion zsh)"
-  compdef _op op
-fi
-# <<< macbook-bootstrap: 1password-cli completion <<<
-EOF
-)
-
-  append_block_if_missing "${HOME}/.zshrc" "# >>> macbook-bootstrap: 1password-cli completion >>>" "$zshrc_block"
-}
-
 ensure_zsh_ssh_config() {
   local zshrc_block
 
@@ -447,7 +463,6 @@ install_requested_packages() {
   install_with_fallback "visual-studio-code" "cask:visual-studio-code"
   install_with_fallback "chatgpt" "cask:chatgpt"
   install_with_fallback "1password" "cask:1password"
-  install_with_fallback "1password-cli" "cask:1password-cli"
   install_with_fallback "slack" "cask:slack"
 }
 
@@ -1857,7 +1872,9 @@ main() {
   ensure_zsh_zoxide_config
   ensure_zsh_ls_color_config
   ensure_zsh_editor_config
-  ensure_zsh_op_completion_config
+  remove_block_if_present "${HOME}/.zshrc" \
+    "# >>> macbook-bootstrap: 1password-cli completion >>>" \
+    "# <<< macbook-bootstrap: 1password-cli completion <<<"
   ensure_zsh_ssh_config
   ensure_zsh_aliases_config
   install_superpowers_plugins

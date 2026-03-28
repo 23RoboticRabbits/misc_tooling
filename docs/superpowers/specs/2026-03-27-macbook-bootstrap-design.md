@@ -44,6 +44,7 @@ The bootstrap script is a single file with small shell functions grouped by resp
 
 - Install formulae for CLI tools and build dependencies where possible.
 - Install casks for GUI apps.
+- Install the `1password` desktop app, but do not install `1password-cli`.
 - Treat `npm` as satisfied by the `node` install rather than forcing a separate package.
 - Resolve `codex` by trying the formula first and then the cask if needed.
 - Resolve font requests by matching available Homebrew casks beginning with `font-fira` and `font-ia`, with explicit fallback tokens if search results are empty.
@@ -55,9 +56,9 @@ The bootstrap script is a single file with small shell functions grouped by resp
 Append managed blocks to:
 
 - `~/.zprofile` for Homebrew `shellenv`
-- `~/.zshrc` for `FPATH`, `compinit`, and `rbenv` initialization
+- `~/.zshrc` for `FPATH`, `compinit`, `rbenv` initialization, editor defaults, and `SSH_AUTH_SOCK`
 
-The managed blocks are marker-delimited so the script can avoid duplicate entries on reruns.
+The managed blocks are marker-delimited so the script can avoid duplicate entries on reruns and remove obsolete bootstrap-managed blocks when a configuration is no longer desired.
 
 ## Sublime Defaults
 
