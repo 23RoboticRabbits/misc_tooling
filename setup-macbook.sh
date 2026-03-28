@@ -422,6 +422,8 @@ install_requested_packages() {
   install_with_fallback "claude-code" "cask:claude-code"
   install_with_fallback "codex" "cask:codex"
   install_with_fallback "cursor" "cask:cursor"
+  install_with_fallback "google-chrome" "cask:google-chrome"
+  install_with_fallback "google-drive" "cask:google-drive"
   install_with_fallback "iterm2" "cask:iterm2"
   install_with_fallback "obsidian" "cask:obsidian"
   install_with_fallback "sublime-merge" "cask:sublime-merge"
@@ -710,9 +712,11 @@ configure_dock() {
   fi
 
   for app_name in \
+    "Google Chrome" \
     "iTerm" \
     "Claude" \
     "ChatGPT" \
+    "Obsidian" \
     "Visual Studio Code" \
     "Cursor" \
     "Sublime Text" \
@@ -951,7 +955,8 @@ configure_sublime_text() {
     warn "Unable to install Package Control for Sublime Text"
   fi
 
-  cat >"$package_control_settings" <<'EOF' || warn "Failed to write ${package_control_settings}"
+  if [ ! -f "$package_control_settings" ]; then
+    cat >"$package_control_settings" <<'EOF' || warn "Failed to write ${package_control_settings}"
 {
   "installed_packages": [
     "A File Icon",
@@ -972,8 +977,10 @@ configure_sublime_text() {
   ]
 }
 EOF
+  fi
 
-  cat >"$preferences_file" <<'EOF' || warn "Failed to write ${preferences_file}"
+  if [ ! -f "$preferences_file" ]; then
+    cat >"$preferences_file" <<'EOF' || warn "Failed to write ${preferences_file}"
 {
   "tab_size": 2,
   "translate_tabs_to_spaces": true,
@@ -986,8 +993,10 @@ EOF
   "color_scheme": "Nord.sublime-color-scheme"
 }
 EOF
+  fi
 
-  cat >"$lsp_settings_file" <<'EOF' || warn "Failed to write ${lsp_settings_file}"
+  if [ ! -f "$lsp_settings_file" ]; then
+    cat >"$lsp_settings_file" <<'EOF' || warn "Failed to write ${lsp_settings_file}"
 {
   // Global LSP behavior
   "show_diagnostics_panel_on_save": 0,
@@ -1034,8 +1043,10 @@ EOF
   }
 }
 EOF
+  fi
 
-  cat >"$sublimelinter_settings_file" <<'EOF' || warn "Failed to write ${sublimelinter_settings_file}"
+  if [ ! -f "$sublimelinter_settings_file" ]; then
+    cat >"$sublimelinter_settings_file" <<'EOF' || warn "Failed to write ${sublimelinter_settings_file}"
 {
   "paths": {
     "osx": ["~/.rbenv/shims", "~/.rbenv/bin"]
@@ -1047,6 +1058,398 @@ EOF
   }
 }
 EOF
+  fi
+}
+
+install_obsidian_plugin() {
+  local plugin_id="$1"
+  local github_owner="$2"
+  local github_repo="$3"
+  local plugins_dir="$4"
+  local install_dir="${plugins_dir}/${plugin_id}"
+
+  mkdir -p "$install_dir"
+
+  if [ -f "${install_dir}/main.js" ] && [ -f "${install_dir}/manifest.json" ]; then
+    log "Obsidian plugin already installed: ${plugin_id}"
+    return 0
+  fi
+
+  log "Installing Obsidian plugin: ${plugin_id}"
+  local base_url="https://github.com/${github_owner}/${github_repo}/releases/latest/download"
+
+  if ! download_file "${base_url}/manifest.json" "${install_dir}/manifest.json"; then
+    warn "Failed to download manifest for Obsidian plugin: ${plugin_id}"
+    return 1
+  fi
+
+  if ! download_file "${base_url}/main.js" "${install_dir}/main.js"; then
+    warn "Failed to download main.js for Obsidian plugin: ${plugin_id}"
+    return 1
+  fi
+
+  # styles.css is optional for some plugins
+  download_file "${base_url}/styles.css" "${install_dir}/styles.css" >/dev/null 2>&1 || true
+}
+
+configure_obsidian() {
+  local vault_dir="${HOME}/Documents/Obsidian"
+  local obsidian_dir="${vault_dir}/.obsidian"
+  local plugins_dir="${obsidian_dir}/plugins"
+  local themes_dir="${obsidian_dir}/themes/Minimal"
+  local snippets_dir="${obsidian_dir}/snippets"
+  local templates_dir="${vault_dir}/Templates"
+
+  log "Configuring Obsidian vault at ${vault_dir}"
+
+  mkdir -p \
+    "${vault_dir}/00 - Home" \
+    "${vault_dir}/10 - Daily Notes" \
+    "${vault_dir}/20 - Projects" \
+    "${vault_dir}/30 - Teams & People" \
+    "${vault_dir}/40 - Meetings" \
+    "${vault_dir}/50 - Research" \
+    "${vault_dir}/60 - Resources/Attachments" \
+    "$templates_dir" \
+    "$plugins_dir" \
+    "$themes_dir" \
+    "$snippets_dir" || { warn "Failed to create Obsidian vault structure"; return 0; }
+
+  # Download Minimal theme
+  local minimal_base="https://github.com/kepano/obsidian-minimal/releases/latest/download"
+  if [ ! -f "${themes_dir}/theme.css" ]; then
+    download_file "${minimal_base}/theme.css" "${themes_dir}/theme.css" || warn "Failed to download Minimal theme CSS"
+  fi
+  if [ ! -f "${themes_dir}/manifest.json" ]; then
+    download_file "${minimal_base}/manifest.json" "${themes_dir}/manifest.json" || warn "Failed to download Minimal theme manifest"
+  fi
+
+  # Install community plugins
+  install_obsidian_plugin "dataview"                  "blacksmithgu"         "obsidian-dataview"         "$plugins_dir" || true
+  install_obsidian_plugin "templater-obsidian"        "SilentVoid13"         "Templater"                 "$plugins_dir" || true
+  install_obsidian_plugin "calendar"                  "liamcain"             "obsidian-calendar-plugin"  "$plugins_dir" || true
+  install_obsidian_plugin "periodic-notes"            "liamcain"             "obsidian-periodic-notes"   "$plugins_dir" || true
+  install_obsidian_plugin "obsidian-tasks-plugin"     "obsidian-tasks-group" "obsidian-tasks"            "$plugins_dir" || true
+  install_obsidian_plugin "obsidian-kanban"           "mgmeyers"             "obsidian-kanban"           "$plugins_dir" || true
+  install_obsidian_plugin "obsidian-minimal-settings" "kepano"               "obsidian-minimal-settings" "$plugins_dir" || true
+  install_obsidian_plugin "obsidian-style-settings"   "mgmeyers"             "obsidian-style-settings"   "$plugins_dir" || true
+
+  # Enabled plugins list (written only once; user can extend via UI)
+  if [ ! -f "${obsidian_dir}/community-plugins.json" ]; then
+    cat >"${obsidian_dir}/community-plugins.json" <<'EOF' || warn "Failed to write Obsidian community-plugins.json"
+[
+  "dataview",
+  "templater-obsidian",
+  "calendar",
+  "periodic-notes",
+  "obsidian-tasks-plugin",
+  "obsidian-kanban",
+  "obsidian-minimal-settings",
+  "obsidian-style-settings"
+]
+EOF
+  fi
+
+  # Theme and font appearance
+  if [ ! -f "${obsidian_dir}/appearance.json" ]; then
+    cat >"${obsidian_dir}/appearance.json" <<'EOF' || warn "Failed to write Obsidian appearance.json"
+{
+  "baseTheme": "dark",
+  "cssTheme": "Minimal",
+  "accentColor": "#81A1C1",
+  "textFontFamily": "iA Writer Quattro S",
+  "interfaceFontFamily": "iA Writer Quattro S",
+  "monospaceFontFamily": "iA Writer Mono S",
+  "baseFontSize": 16,
+  "enabledCssSnippets": ["nord"]
+}
+EOF
+  fi
+
+  # Nord colour palette CSS snippet
+  if [ ! -f "${snippets_dir}/nord.css" ]; then
+    cat >"${snippets_dir}/nord.css" <<'EOF' || warn "Failed to write Obsidian Nord CSS snippet"
+/* Nord colour palette for Obsidian Minimal theme */
+.theme-dark {
+  --color-base-00: #2e3440;
+  --color-base-10: #3b4252;
+  --color-base-20: #434c5e;
+  --color-base-25: #4c566a;
+  --color-base-30: #4c566a;
+  --color-base-35: #58647b;
+  --color-base-40: #7b88a8;
+  --color-base-50: #9eafcc;
+  --color-base-60: #b0bad0;
+  --color-base-70: #c8d0e0;
+  --color-base-100: #eceff4;
+
+  --interactive-accent: #81a1c1;
+  --interactive-accent-rgb: 129, 161, 193;
+  --interactive-accent-hover: #88c0d0;
+
+  --background-primary: #2e3440;
+  --background-primary-alt: #3b4252;
+  --background-secondary: #3b4252;
+  --background-secondary-alt: #434c5e;
+  --background-modifier-border: #4c566a;
+
+  --text-normal: #d8dee9;
+  --text-muted: #9eafcc;
+  --text-faint: #7b88a8;
+  --text-accent: #81a1c1;
+  --text-accent-hover: #88c0d0;
+
+  --color-red: #bf616a;
+  --color-orange: #d08770;
+  --color-yellow: #ebcb8b;
+  --color-green: #a3be8c;
+  --color-cyan: #88c0d0;
+  --color-blue: #81a1c1;
+  --color-purple: #b48ead;
+}
+EOF
+  fi
+
+  # Core app settings
+  if [ ! -f "${obsidian_dir}/app.json" ]; then
+    cat >"${obsidian_dir}/app.json" <<'EOF' || warn "Failed to write Obsidian app.json"
+{
+  "legacyEditor": false,
+  "livePreview": true,
+  "defaultViewMode": "source",
+  "vimMode": false,
+  "showLineNumber": false,
+  "readableLineLength": true,
+  "strictLineBreaks": false,
+  "showFrontmatter": false,
+  "spellcheck": true,
+  "spellcheckLanguages": ["en"],
+  "promptDelete": false,
+  "trashOption": "system",
+  "attachmentFolderPath": "60 - Resources/Attachments",
+  "newLinkFormat": "shortest",
+  "useMarkdownLinks": false
+}
+EOF
+  fi
+
+  # Core plugins
+  if [ ! -f "${obsidian_dir}/core-plugins.json" ]; then
+    cat >"${obsidian_dir}/core-plugins.json" <<'EOF' || warn "Failed to write Obsidian core-plugins.json"
+[
+  "file-explorer",
+  "global-search",
+  "switcher",
+  "graph",
+  "backlink",
+  "canvas",
+  "outgoing-link",
+  "tag-pane",
+  "properties",
+  "page-preview",
+  "daily-notes",
+  "templates",
+  "note-composer",
+  "command-palette",
+  "word-count",
+  "outline",
+  "workspaces"
+]
+EOF
+  fi
+
+  # Daily notes core plugin config
+  if [ ! -f "${obsidian_dir}/daily-notes.json" ]; then
+    cat >"${obsidian_dir}/daily-notes.json" <<'EOF' || warn "Failed to write Obsidian daily-notes.json"
+{
+  "folder": "10 - Daily Notes",
+  "template": "Templates/Daily Note",
+  "autorun": false,
+  "format": "YYYY-MM-DD"
+}
+EOF
+  fi
+
+  # Templater plugin config
+  if [ ! -f "${plugins_dir}/templater-obsidian/data.json" ]; then
+    cat >"${plugins_dir}/templater-obsidian/data.json" <<'EOF' || warn "Failed to write Templater plugin config"
+{
+  "template_folder": "Templates",
+  "auto_jump_to_cursor": true,
+  "trigger_on_file_creation": false,
+  "enable_system_commands": false
+}
+EOF
+  fi
+
+  # Dashboard note
+  if [ ! -f "${vault_dir}/00 - Home/Dashboard.md" ]; then
+    cat >"${vault_dir}/00 - Home/Dashboard.md" <<'EOF' || warn "Failed to write Obsidian dashboard note"
+# Dashboard
+
+> Director of Engineering · SWTCH Energy
+
+## Quick Navigation
+
+- [[10 - Daily Notes/|Daily Notes]]
+- [[20 - Projects/|Projects]]
+- [[30 - Teams & People/|Team]]
+- [[40 - Meetings/|Meetings]]
+- [[50 - Research/|Research]]
+- [[60 - Resources/|Resources]]
+
+## Active Projects
+
+```dataview
+TABLE status, priority FROM "20 - Projects"
+WHERE status != "Complete"
+SORT priority ASC
+```
+
+## Recent Meetings
+
+```dataview
+LIST FROM "40 - Meetings"
+SORT file.mtime DESC
+LIMIT 5
+```
+
+## Open Tasks
+
+```tasks
+not done
+limit 10
+```
+EOF
+  fi
+
+  # Templates
+  if [ ! -f "${templates_dir}/Daily Note.md" ]; then
+    cat >"${templates_dir}/Daily Note.md" <<'EOF' || warn "Failed to write Daily Note template"
+# <% tp.date.now("YYYY-MM-DD, dddd") %>
+
+## Focus
+
+-
+
+## Meetings
+
+-
+
+## Notes
+
+## Tomorrow
+
+-
+EOF
+  fi
+
+  if [ ! -f "${templates_dir}/Meeting Note.md" ]; then
+    cat >"${templates_dir}/Meeting Note.md" <<'EOF' || warn "Failed to write Meeting Note template"
+---
+date: <% tp.date.now("YYYY-MM-DD") %>
+attendees:
+type: meeting
+---
+
+# <% tp.file.title %>
+
+**Date:** <% tp.date.now("YYYY-MM-DD") %>
+**Attendees:**
+
+## Agenda
+
+-
+
+## Notes
+
+## Actions
+
+- [ ]
+
+## Decisions
+
+EOF
+  fi
+
+  if [ ! -f "${templates_dir}/Project Brief.md" ]; then
+    cat >"${templates_dir}/Project Brief.md" <<'EOF' || warn "Failed to write Project Brief template"
+---
+date: <% tp.date.now("YYYY-MM-DD") %>
+status: Active
+priority: Medium
+owner:
+---
+
+# <% tp.file.title %>
+
+## Overview
+
+## Goals & Success Criteria
+
+## Scope
+
+### In Scope
+
+### Out of Scope
+
+## Stakeholders
+
+## Timeline
+
+## Risks
+
+## Notes
+EOF
+  fi
+
+  if [ ! -f "${templates_dir}/1-1 Note.md" ]; then
+    cat >"${templates_dir}/1-1 Note.md" <<'EOF' || warn "Failed to write 1-1 Note template"
+---
+date: <% tp.date.now("YYYY-MM-DD") %>
+person:
+type: 1-1
+---
+
+# 1:1 — <% tp.file.title %>
+
+**Date:** <% tp.date.now("YYYY-MM-DD") %>
+
+## Their Updates
+
+## Blockers & Concerns
+
+## Feedback
+
+## My Updates
+
+## Action Items
+
+- [ ]
+EOF
+  fi
+
+  if [ ! -f "${templates_dir}/Research Note.md" ]; then
+    cat >"${templates_dir}/Research Note.md" <<'EOF' || warn "Failed to write Research Note template"
+---
+date: <% tp.date.now("YYYY-MM-DD") %>
+tags: research
+topic:
+---
+
+# <% tp.file.title %>
+
+## Summary
+
+## Key Findings
+
+## Source(s)
+
+## Related Notes
+
+## My Take
+EOF
+  fi
 }
 
 configure_iterm2() {
@@ -1404,6 +1807,7 @@ main() {
   configure_vscode
   configure_cursor
   configure_dock
+  configure_obsidian
   configure_iterm2
   configure_starship
   print_summary

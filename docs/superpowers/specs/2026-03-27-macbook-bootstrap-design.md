@@ -2,7 +2,7 @@
 
 ## Goal
 
-Create a single standalone bash script that can be hosted on GitHub and executed via `curl` to bootstrap a new MacBook for Mike Roth.
+Create a single standalone bash script that can be hosted on GitHub and executed via `curl` to bootstrap a new MacBook.
 
 ## Scope
 
@@ -35,8 +35,10 @@ The bootstrap script is a single file with small shell functions grouped by resp
 4. Formula and cask installation helpers with fallback support
 5. Git configuration
 6. Sublime default-app registration using `duti`
-7. iTerm2 theme/profile installation
-8. Final summary output
+7. Obsidian vault creation and plugin/theme installation
+8. iTerm2 theme/profile installation
+9. macOS Dock seeding via `dockutil`
+10. Final summary output
 
 ## Package Strategy
 
@@ -46,6 +48,7 @@ The bootstrap script is a single file with small shell functions grouped by resp
 - Resolve `codex` by trying the formula first and then the cask if needed.
 - Resolve font requests by matching available Homebrew casks beginning with `font-fira` and `font-ia`, with explicit fallback tokens if search results are empty.
 - Use Homebrew for `rbenv` and Ruby build prerequisites, but install actual Ruby runtimes through `rbenv`, not Homebrew Ruby formulae.
+- Install `google-chrome` and `google-drive` casks for browser and cloud storage.
 
 ## zsh Configuration
 
@@ -70,29 +73,27 @@ using common file extensions plus plain-text UTIs where practical.
 
 ## Sublime Package Bootstrap
 
-Seed Sublime Text configuration under `~/Library/Application Support/Sublime Text` to install:
+Seed Sublime Text configuration under `~/Library/Application Support/Sublime Text` to install via Package Control:
 
-- `LSP`
-- `LSP-ruby-lsp`
-- `Ruby Syntax`
-- `Rails`
-- `ERB Snippets`
-- `SublimeLinter`
-- `SublimeLinter-rubocop`
-- `RubyFormat`
-- `Terminus`
-- `GitSavvy`
-- `GitGutter`
 - `A File Icon`
 - `AdvancedNewFile`
-- `SideBarEnhancements`
-- `RSpec`
-- `BracketHighlighter`
-- `TrailingSpaces`
 - `AutoFileName`
+- `Better RSpec`
+- `ERB Snippets`
+- `GitSavvy`
+- `LSP`
 - `Nord`
+- `Package Control`
+- `Ruby on Rails snippets`
+- `SideBarEnhancements`
+- `SublimeLinter`
+- `SublimeLinter-rubocop`
+- `Terminus`
+- `TrailingSpaces`
 
-Also write the requested user preferences and LSP settings, plus supporting SublimeLinter path settings so GUI-launched Sublime can find `rbenv` shims more reliably.
+Also write user preferences (`Preferences.sublime-settings`), LSP client settings (`LSP.sublime-settings`) with ruby-lsp configured via rbenv, and SublimeLinter path settings (`SublimeLinter.sublime-settings`) so GUI-launched Sublime can find `rbenv` shims more reliably.
+
+All four settings files are written only when absent, preserving any user customisations on rerun.
 
 ## Ruby Setup
 

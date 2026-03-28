@@ -177,8 +177,8 @@ configure_git() {
   local gitignore_file="${HOME}/.gitignore_global"
 
   log "Configuring Git"
-  git config --global user.name "Mike Roth" || warn "Unable to set git user.name"
-  git config --global user.email "mike.roth@swtchenergy.com" || warn "Unable to set git user.email"
+  git config --global user.name "Your Name" || warn "Unable to set git user.name"
+  git config --global user.email "you@example.com" || warn "Unable to set git user.email"
   git config --global core.excludesfile "$gitignore_file" || warn "Unable to set git core.excludesfile"
 
   # AI tools

@@ -2,17 +2,19 @@
 
 ## Goal
 
-Extend `setup-macbook.sh` to install `dockutil` and seed the macOS Dock with Mike's core apps when they are missing.
+Extend `setup-macbook.sh` to install `dockutil` and seed the macOS Dock with core apps when they are missing.
 
 ## Scope
 
 The script must:
 
 - install `dockutil` via Homebrew
-- check for these app bundles in `/Applications`:
+- check for these app bundles in `/Applications` (in Dock order):
+  - `Google Chrome.app`
   - `iTerm.app`
   - `Claude.app`
   - `ChatGPT.app`
+  - `Obsidian.app`
   - `Visual Studio Code.app`
   - `Cursor.app`
   - `Sublime Text.app`
