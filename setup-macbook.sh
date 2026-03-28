@@ -23,10 +23,6 @@ die() {
   exit 1
 }
 
-ensure_sudo_session() {
-  log "Requesting administrator access up front so privileged installs can run without additional prompts"
-  sudo -v || die "Administrator access is required to continue"
-}
 
 append_block_if_missing() {
   local file="$1"
@@ -438,6 +434,7 @@ install_requested_packages() {
   install_with_fallback "chatgpt" "cask:chatgpt"
   install_with_fallback "1password" "cask:1password"
   install_with_fallback "1password-cli" "cask:1password-cli"
+  install_with_fallback "slack" "cask:slack"
 }
 
 collect_cask_matches() {
@@ -1782,7 +1779,6 @@ print_summary() {
 }
 
 main() {
-  ensure_sudo_session
   install_homebrew
   load_homebrew_env
 
