@@ -1,4 +1,7 @@
-# CLAUDE.md
+# AGENTS.md
+
+> This file is generated from `CLAUDE.md`. Edit `CLAUDE.md` and run `./sync-agent-docs.sh` to refresh this file.
+
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
