@@ -403,6 +403,19 @@ install_with_fallback() {
   warn "Unable to install ${label}; tried: $*"
 }
 
+configure_homebrew_autoupdate() {
+  # 604800 seconds = 1 week
+  if brew autoupdate status 2>/dev/null | grep -q "AutoUpdate is installed and active"; then
+    log "Homebrew autoupdate already configured"
+    return 0
+  fi
+
+  log "Configuring weekly Homebrew autoupdate"
+  brew tap homebrew/autoupdate >/dev/null 2>&1 || warn "Failed to tap homebrew/autoupdate"
+  brew autoupdate start 604800 --upgrade --cleanup >/dev/null 2>&1 \
+    || warn "Failed to configure brew autoupdate"
+}
+
 install_requested_packages() {
   install_with_fallback "aider" "formula:aider"
   install_with_fallback "awscli" "formula:awscli"
@@ -717,6 +730,7 @@ configure_dock() {
   for app_name in \
     "Google Chrome" \
     "iTerm" \
+    "Slack" \
     "Claude" \
     "ChatGPT" \
     "Obsidian" \
@@ -1792,6 +1806,7 @@ main() {
   ensure_zsh_plugins_config
   ensure_zsh_starship_config
   install_requested_packages
+  configure_homebrew_autoupdate
   install_requested_fonts
   ensure_zsh_fzf_config
   ensure_zsh_zoxide_config
