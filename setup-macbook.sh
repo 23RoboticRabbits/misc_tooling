@@ -1119,7 +1119,7 @@ configure_starship() {
 
   cat >"$config_file" <<'EOF' || { warn "Failed to write ${config_file}"; return 0; }
 format = """
-$directory$git_branch$git_status$ruby$nodejs$fill$cmd_duration$status$time
+$directory$git_branch$git_state$git_status$ruby$nodejs$fill$cmd_duration$status$time
 $character"""
 
 [fill]
@@ -1134,6 +1134,10 @@ truncate_to_repo = true
 symbol = " "
 style = "bold yellow"
 format = "[$symbol$branch(:$remote_branch)]($style) "
+
+[git_state]
+format = '[\($state( $progress_current/$progress_total)\)]($style) '
+style = "bold yellow"
 
 [git_status]
 style = "red"
