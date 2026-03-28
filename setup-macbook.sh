@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Install via curl (direct pipe):
-#   curl -fsSL https://raw.githubusercontent.com/<github-user>/<repo>/<branch>/setup-macbook.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/23RoboticRabbits/misc_tooling/main/setup-macbook.sh | bash
 #
 # Install via curl (download then run):
-#   curl -fsSL https://raw.githubusercontent.com/<github-user>/<repo>/<branch>/setup-macbook.sh -o setup-macbook.sh && bash setup-macbook.sh
+#   curl -fsSL https://raw.githubusercontent.com/23RoboticRabbits/misc_tooling/main/setup-macbook.sh -o setup-macbook.sh && bash setup-macbook.sh
 
 set -euo pipefail
 
