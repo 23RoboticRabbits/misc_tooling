@@ -1131,7 +1131,7 @@ truncation_length = 3
 truncate_to_repo = true
 
 [git_branch]
-symbol = " "
+symbol = " "
 style = "bold yellow"
 format = "[$symbol$branch(:$remote_branch)]($style) "
 
@@ -1152,7 +1152,7 @@ untracked = "?${count}"
 deleted = "✘${count}"
 
 [ruby]
-symbol = " "
+symbol = " "
 style = "bold red"
 detect_files = ["Gemfile", ".ruby-version", "*.gemspec"]
 format = "[$symbol($version)]($style) "
