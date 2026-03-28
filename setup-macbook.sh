@@ -435,6 +435,7 @@ install_requested_packages() {
   install_with_fallback "claude" "cask:claude"
   install_with_fallback "claude-code" "cask:claude-code"
   install_with_fallback "codex" "cask:codex"
+  install_with_fallback "codex-app" "cask:codex-app"
   install_with_fallback "cursor" "cask:cursor"
   install_with_fallback "caffeine" "cask:caffeine"
   install_with_fallback "google-chrome" "cask:google-chrome"
@@ -732,6 +733,7 @@ configure_dock() {
     "iTerm" \
     "Slack" \
     "Claude" \
+    "Codex" \
     "ChatGPT" \
     "Obsidian" \
     "Visual Studio Code" \
