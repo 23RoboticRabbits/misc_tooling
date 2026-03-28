@@ -1109,6 +1109,44 @@ install_obsidian_plugin() {
   download_file "${base_url}/styles.css" "${install_dir}/styles.css" >/dev/null 2>&1 || true
 }
 
+register_obsidian_vault() {
+  local vault_path="$1"
+  local obsidian_config="${HOME}/Library/Application Support/obsidian/obsidian.json"
+
+  log "Registering Obsidian vault: ${vault_path}"
+
+  # "open": true is best-effort — on a fresh Obsidian install it signals that
+  # this vault was open when Obsidian last quit, which causes it to reopen on
+  # next launch.  Obsidian may still show the vault picker on very first run.
+  /usr/bin/ruby <<'RUBY' "$vault_path" "$obsidian_config"
+require "json"
+require "fileutils"
+require "digest"
+
+vault_path, config_file = ARGV
+
+FileUtils.mkdir_p(File.dirname(config_file))
+
+config = begin
+  JSON.parse(File.read(config_file))
+rescue Errno::ENOENT, JSON::ParserError
+  {}
+end
+
+vault_id = Digest::MD5.hexdigest(vault_path)[0, 8]
+
+config["vaults"] ||= {}
+existing = config["vaults"][vault_id] || {}
+config["vaults"][vault_id] = {
+  "path" => vault_path,
+  "ts"   => existing["ts"] || (Time.now.to_f * 1000).to_i,
+  "open" => true
+}
+
+File.write(config_file, JSON.pretty_generate(config) + "\n")
+RUBY
+}
+
 configure_obsidian() {
   local vault_dir="${HOME}/Documents/Obsidian"
   local obsidian_dir="${vault_dir}/.obsidian"
@@ -1122,11 +1160,12 @@ configure_obsidian() {
   mkdir -p \
     "${vault_dir}/00 - Home" \
     "${vault_dir}/10 - Daily Notes" \
-    "${vault_dir}/20 - Projects" \
-    "${vault_dir}/30 - Teams & People" \
-    "${vault_dir}/40 - Meetings" \
-    "${vault_dir}/50 - Research" \
-    "${vault_dir}/60 - Resources/Attachments" \
+    "${vault_dir}/active/projects" \
+    "${vault_dir}/active/meetings" \
+    "${vault_dir}/active/research" \
+    "${vault_dir}/evergreen" \
+    "${vault_dir}/archive" \
+    "${vault_dir}/assets" \
     "$templates_dir" \
     "$plugins_dir" \
     "$themes_dir" \
@@ -1150,6 +1189,7 @@ configure_obsidian() {
   install_obsidian_plugin "obsidian-kanban"           "mgmeyers"             "obsidian-kanban"           "$plugins_dir" || true
   install_obsidian_plugin "obsidian-minimal-settings" "kepano"               "obsidian-minimal-settings" "$plugins_dir" || true
   install_obsidian_plugin "obsidian-style-settings"   "mgmeyers"             "obsidian-style-settings"   "$plugins_dir" || true
+  install_obsidian_plugin "obsidian-git"              "denolehov"            "obsidian-git"              "$plugins_dir" || true
 
   # Enabled plugins list (written only once; user can extend via UI)
   if [ ! -f "${obsidian_dir}/community-plugins.json" ]; then
@@ -1162,7 +1202,8 @@ configure_obsidian() {
   "obsidian-tasks-plugin",
   "obsidian-kanban",
   "obsidian-minimal-settings",
-  "obsidian-style-settings"
+  "obsidian-style-settings",
+  "obsidian-git"
 ]
 EOF
   fi
@@ -1243,7 +1284,7 @@ EOF
   "spellcheckLanguages": ["en"],
   "promptDelete": false,
   "trashOption": "system",
-  "attachmentFolderPath": "60 - Resources/Attachments",
+  "attachmentFolderPath": "assets",
   "newLinkFormat": "shortest",
   "useMarkdownLinks": false
 }
@@ -1309,16 +1350,16 @@ EOF
 ## Quick Navigation
 
 - [[10 - Daily Notes/|Daily Notes]]
-- [[20 - Projects/|Projects]]
-- [[30 - Teams & People/|Team]]
-- [[40 - Meetings/|Meetings]]
-- [[50 - Research/|Research]]
-- [[60 - Resources/|Resources]]
+- [[active/projects/|Projects]]
+- [[active/meetings/|Meetings]]
+- [[active/research/|Research]]
+- [[evergreen/|Evergreen]]
+- [[archive/|Archive]]
 
 ## Active Projects
 
 ```dataview
-TABLE status, priority FROM "20 - Projects"
+TABLE status, priority FROM "active/projects"
 WHERE status != "Complete"
 SORT priority ASC
 ```
@@ -1326,7 +1367,7 @@ SORT priority ASC
 ## Recent Meetings
 
 ```dataview
-LIST FROM "40 - Meetings"
+LIST FROM "active/meetings"
 SORT file.mtime DESC
 LIMIT 5
 ```
@@ -1467,6 +1508,8 @@ topic:
 ## My Take
 EOF
   fi
+
+  register_obsidian_vault "${vault_dir}" || warn "Failed to register Obsidian vault"
 }
 
 configure_iterm2() {
