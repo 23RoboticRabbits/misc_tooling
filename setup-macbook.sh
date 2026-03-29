@@ -464,7 +464,7 @@ install_requested_packages() {
   install_with_fallback "1password" "cask:1password"
   install_with_fallback "slack" "cask:slack"
   install_with_fallback "lastpass" "cask:lastpass"
-  install_with_fallback "pearlcleaner" "cask:pearlcleaner"
+  install_with_fallback "pearcleaner" "cask:pearcleaner"
 }
 
 collect_cask_matches() {
