@@ -735,7 +735,6 @@ configure_dock() {
     "Codex" \
     "ChatGPT" \
     "Obsidian" \
-    "Visual Studio Code" \
     "Cursor" \
     "Sublime Text" \
     "Sublime Merge"; do
