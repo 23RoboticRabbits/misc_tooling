@@ -460,10 +460,11 @@ install_requested_packages() {
   install_with_fallback "obsidian" "cask:obsidian"
   install_with_fallback "sublime-merge" "cask:sublime-merge"
   install_with_fallback "sublime-text" "cask:sublime-text"
-  install_with_fallback "visual-studio-code" "cask:visual-studio-code"
   install_with_fallback "chatgpt" "cask:chatgpt"
   install_with_fallback "1password" "cask:1password"
   install_with_fallback "slack" "cask:slack"
+  install_with_fallback "lastpass" "cask:lastpass"
+  install_with_fallback "pearlcleaner" "cask:pearlcleaner"
 }
 
 collect_cask_matches() {
@@ -571,7 +572,6 @@ configure_git() {
   ensure_line_in_file "$gitignore_file" "*.swo"
   ensure_line_in_file "$gitignore_file" "*~"
   ensure_line_in_file "$gitignore_file" ".vscode/"
-
   # Node
   ensure_line_in_file "$gitignore_file" "node_modules/"
   ensure_line_in_file "$gitignore_file" "npm-debug.log*"
@@ -693,22 +693,6 @@ install_vs_editor_extensions() {
     log "Installing ${label} extension: ${ext}"
     "$cli" --install-extension "$ext" >/dev/null 2>&1 || warn "Failed to install ${label} extension: ${ext}"
   done
-}
-
-configure_vscode() {
-  local settings_file="${HOME}/Library/Application Support/Code/User/settings.json"
-  local cli=""
-  local known_cli="/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code"
-
-  log "Configuring VS Code"
-  write_vs_editor_settings "$settings_file"
-
-  if command -v code >/dev/null 2>&1; then
-    cli="code"
-  elif [ -x "$known_cli" ]; then
-    cli="$known_cli"
-  fi
-  install_vs_editor_extensions "$cli" "VS Code"
 }
 
 configure_cursor() {
@@ -1884,7 +1868,6 @@ main() {
   configure_zsh_aliases
   configure_sublime_text
   configure_sublime_defaults
-  configure_vscode
   configure_cursor
   configure_dock
   configure_obsidian
