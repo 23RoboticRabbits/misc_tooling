@@ -453,6 +453,7 @@ install_requested_packages() {
   install_with_fallback "codex" "cask:codex"
   install_with_fallback "codex-app" "cask:codex-app"
   install_with_fallback "visual-studio-code" "cask:visual-studio-code"
+  install_with_fallback "cursor" "cask:cursor"
   install_with_fallback "caffeine" "cask:caffeine"
   install_with_fallback "google-chrome" "cask:google-chrome"
   install_with_fallback "google-drive" "cask:google-drive"
@@ -711,6 +712,22 @@ configure_vs_code() {
   install_vs_editor_extensions "$cli" "Visual Studio Code"
 }
 
+configure_cursor() {
+  local settings_file="${HOME}/Library/Application Support/Cursor/User/settings.json"
+  local cli=""
+  local known_cli="/Applications/Cursor.app/Contents/Resources/app/bin/cursor"
+
+  log "Configuring Cursor"
+  write_vs_editor_settings "$settings_file"
+
+  if command -v cursor >/dev/null 2>&1; then
+    cli="cursor"
+  elif [ -x "$known_cli" ]; then
+    cli="$known_cli"
+  fi
+  install_vs_editor_extensions "$cli" "Cursor"
+}
+
 dock_has_item() {
   local label="$1"
 
@@ -736,6 +753,7 @@ configure_dock() {
     "ChatGPT" \
     "Obsidian" \
     "Visual Studio Code" \
+    "Cursor" \
     "Sublime Text" \
     "Sublime Merge"; do
     app_path="/Applications/${app_name}.app"
@@ -1868,6 +1886,7 @@ main() {
   configure_sublime_text
   configure_sublime_defaults
   configure_vs_code
+  configure_cursor
   configure_dock
   configure_obsidian
   configure_iterm2
