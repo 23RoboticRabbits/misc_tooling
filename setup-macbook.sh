@@ -452,7 +452,7 @@ install_requested_packages() {
   install_with_fallback "claude-code" "cask:claude-code"
   install_with_fallback "codex" "cask:codex"
   install_with_fallback "codex-app" "cask:codex-app"
-  install_with_fallback "cursor" "cask:cursor"
+  install_with_fallback "visual-studio-code" "cask:visual-studio-code"
   install_with_fallback "caffeine" "cask:caffeine"
   install_with_fallback "google-chrome" "cask:google-chrome"
   install_with_fallback "google-drive" "cask:google-drive"
@@ -695,20 +695,20 @@ install_vs_editor_extensions() {
   done
 }
 
-configure_cursor() {
-  local settings_file="${HOME}/Library/Application Support/Cursor/User/settings.json"
+configure_vs_code() {
+  local settings_file="${HOME}/Library/Application Support/Code/User/settings.json"
   local cli=""
-  local known_cli="/Applications/Cursor.app/Contents/Resources/app/bin/cursor"
+  local known_cli="/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code"
 
-  log "Configuring Cursor"
+  log "Configuring Visual Studio Code"
   write_vs_editor_settings "$settings_file"
 
-  if command -v cursor >/dev/null 2>&1; then
-    cli="cursor"
+  if command -v code >/dev/null 2>&1; then
+    cli="code"
   elif [ -x "$known_cli" ]; then
     cli="$known_cli"
   fi
-  install_vs_editor_extensions "$cli" "Cursor"
+  install_vs_editor_extensions "$cli" "Visual Studio Code"
 }
 
 dock_has_item() {
@@ -735,7 +735,7 @@ configure_dock() {
     "Codex" \
     "ChatGPT" \
     "Obsidian" \
-    "Cursor" \
+    "Visual Studio Code" \
     "Sublime Text" \
     "Sublime Merge"; do
     app_path="/Applications/${app_name}.app"
@@ -1867,7 +1867,7 @@ main() {
   configure_zsh_aliases
   configure_sublime_text
   configure_sublime_defaults
-  configure_cursor
+  configure_vs_code
   configure_dock
   configure_obsidian
   configure_iterm2
